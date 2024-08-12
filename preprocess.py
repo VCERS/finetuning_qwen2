@@ -2,7 +2,7 @@
 
 from shutil import rmtree
 from os import mkdir
-from os.path import exists
+from os.path import exists, join
 from absl import flags, app
 import pandas as pd
 from fuzzywuzzy import fuzz
