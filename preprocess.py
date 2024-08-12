@@ -40,7 +40,7 @@ def main(unused_argv):
     matches = find_near_matches(description, example, 95)
     start = matches[0][0]
     end = matches[0][0] + len(matches[0][1])
-    text = description[start - FLAGS.pad, end + FLAGS.pad]
+    text = description[start - FLAGS.pad:end + FLAGS.pad]
     with open(join(FLAGS.output_dir, '%d.txt' % idx),'w') as f:
       f.write(text)
 
