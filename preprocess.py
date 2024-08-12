@@ -38,6 +38,7 @@ def main(unused_argv):
     example = example_chain_.invoke({'patent': description})
     example = example[example.find('\n\n') + 2:]
     matches = find_near_matches(description, example, 95)
+    if len(matches) == 0: continue
     start = matches[0][0]
     end = matches[0][0] + len(matches[0][1])
     text = description[start - FLAGS.pad:end + FLAGS.pad]
