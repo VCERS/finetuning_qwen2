@@ -5,6 +5,7 @@ from os import mkdir
 from os.path import exists
 from absl import flags, app
 import pandas as pd
+from fuzzywuzzy import fuzz
 from models import Qwen2
 from chains import example_chain
 
@@ -17,6 +18,15 @@ def add_options():
   flags.DEFINE_integer('pad', default = 100, help = 'padding token number')
   flags.DEFINE_boolean('locally', default = False, help = 'whether to run the model locally')
 
+def find_near_matches(long_string, sub_string, threshold=80):
+    matches = []
+    for i in range(len(long_string) - len(sub_string) + 1):
+        window = long_string[i:i+len(sub_string)]
+        similarity = fuzz.ratio(window, sub_string)
+        if similarity >= threshold:
+            matches.append((i, window, similarity))
+    return matches
+
 def main(unused_argv):
   if exists(FLAGS.output_dir): rmtree(FLAGS.output_dir)
   mkdir(FLAGS.output_dir)
@@ -26,8 +36,13 @@ def main(unused_argv):
   for idx in range(FLAGS.size):
     description = df.iloc[idx]['Description']
     example = example_chain_.invoke({'patent': description})
-    text_tokens = tokenizer.backend_tokenizer.pre_tokenizer.pre_tokenize_str(description)
-    example_tokens = tokenizer.backend_tokenizer.pre_tokenizer.pre_tokenizer_str(example)
+    example = example[example.find('\n\n') + 2:]
+    matches = find_near_matches(description, example, 95)
+    start = matches[0][0]
+    end = matches[0][0] + len(matches[0][1])
+    text = description[start - FLAGS.pad, end + FLAGS.pad]
+    with open(join(FLAGS.output_dir, '%d.txt' % idx),'w') as f:
+      f.write(text)
 
 if __name__ == "__main__":
   add_options()
