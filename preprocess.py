@@ -37,7 +37,7 @@ def main(unused_argv):
     description = df.iloc[idx]['Description']
     example = example_chain_.invoke({'patent': description})
     example = example[example.find('\n\n') + 2:]
-    matches = find_near_matches(description, example, 95)
+    matches = find_near_matches(description, example, 80)
     if len(matches) == 0: continue
     start = matches[0][0]
     end = matches[0][0] + len(matches[0][1])
