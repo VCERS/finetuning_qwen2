@@ -12,7 +12,7 @@ from chains import example_chain
 FLAGS = flags.FLAGS
 
 def add_options():
-  flags.DEFINE_string('input_csv', default = None, help = 'path to csv')
+  flags.DEFINE_string('input_json', default = None, help = 'path to csv')
   flags.DEFINE_string('output_dir', default = 'output', help = 'path to directory of output')
   flags.DEFINE_integer('size', default = 150, help = 'dataset number')
   flags.DEFINE_integer('pad', default = 100, help = 'padding token number')
@@ -32,7 +32,7 @@ def main(unused_argv):
   mkdir(FLAGS.output_dir)
   tokenizer, llm = Qwen2(FLAGS.locally)
   example_chain_ = example_chain(llm, tokenizer)
-  df = pd.read_csv(FLAGS.input_csv)
+  df = pd.read_json(FLAGS.input_json)
   for idx in range(FLAGS.size):
     description = df.iloc[idx]['Description']
     example = example_chain_.invoke({'patent': description})
