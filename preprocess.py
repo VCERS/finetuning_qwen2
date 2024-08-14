@@ -35,6 +35,10 @@ def main(unused_argv):
   df = pd.read_json(FLAGS.input_json)
   for idx in range(FLAGS.size):
     description = df.iloc[idx]['Description']
+    with open(join(FLAGS.output_dir, '%d.txt' % idx), 'w') as f:
+      f.write(description)
+  for idx in range(FLAGS.size):
+    description = df.iloc[idx]['Description']
     example = example_chain_.invoke({'patent': description})
     example = example[example.find('\n\n') + 2:]
     matches = find_near_matches(description, example, 80)
@@ -42,7 +46,7 @@ def main(unused_argv):
     start = matches[0][0]
     end = matches[0][0] + len(matches[0][1])
     text = description[start - FLAGS.pad:end + FLAGS.pad]
-    with open(join(FLAGS.output_dir, '%d.txt' % idx),'w') as f:
+    with open(join(FLAGS.output_dir, '%d_example1.txt' % idx),'w') as f:
       f.write(text)
 
 if __name__ == "__main__":
