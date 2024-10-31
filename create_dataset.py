@@ -9,45 +9,30 @@ import json
 FLAGS = flags.FLAGS
 
 def add_options():
-  flags.DEFINE_enum('mode', default = 'electrolyte', enum_values = {'electrolyte', 'precursors', 'conductivity'}, help = 'dataset purpose')
   flags.DEFINE_string('input', default = None, help = 'path to input directory')
   flags.DEFINE_string('output', default = 'dataset.json', help = 'path to output dataset')
 
 def main(unused_argv):
-  if FLAGS.mode == 'electrolyte':
-    system_message = "Given a text from a patent describing how an electrolyte is synthesised, please extract information according to the following instructions. if the text specifies the proportion of the elements of the electrolyte (through ICP reading or chemical formula of the electrolyte), extract element proportion in a dict format whose keys are the elements in chemical formula and values are their corresponding proportions. if the proportion of the elements are not present in the text, just return string none."
-  elif FLAGS.mode == 'precursors':
-    system_message = "Given a text from a patent describing how an electrolyte is synthesised, please extract information according to the following instructions. if the text specifies the precursors of the electrolyte, extract precursors in a dict format whose keys are the precursors in chemical formula and values are their dosages (or mass of the precursor used) in the chemical reaction to synthesis the electrolyte. if the dosage of a precursor is not specified just assign the corresponding value to none. if the precursors of the electrolyte is not given, just return string none."
-  elif FLAGS.mode == 'conductivity':
-    system_message = "Given a text from a patent describing how an electrolyte is synthesised, please extract information according to the following instructions. if the text specifies the conductivity of th electrolyte, return the conductivity in its original text. if the conductivity is not given in the text just return string none."
-  else:
-    raise Exception('unknown mode')
-  with open(FLAGS.output, 'w') as output_file:
-    for root, dirs, files in tqdm(walk(FLAGS.input)):
-      for f in files:
-        stem, ext = splitext(f)
-        if ext != '.json': continue
-        text_path = join(root, stem + '.txt')
-        label_path = join(root, f)
-        print('processing', label_path)
-        with open(text_path, 'r') as text_file:
-          text = text_file.read()
-        with open(label_path, 'r') as label_file:
-          label = json.loads(label_file.read())
-        if FLAGS.mode == 'electrolyte':
-          label = label['electrolyte']
-        elif FLAGS.mode == 'precursors':
-          label = label['precursors']
-        elif FLAGS.mode == 'conductivity':
-          label = label['conductivity']
-        else:
-          raise Exception('unknown mode')
-        messages = {"messages": [
-          {'role': 'system', 'content': system_message},
-          {'role': 'user', 'content': text},
-          {'role': 'assistant', 'content': label if type(label) is str else json.dumps(label)}
-        ]}
-        output_file.write(json.dumps(messages, ensure_ascii = False) + '\n')
+  system_message = """please label entities and relationships in text the way given in the example
+
+example:
+
+input: \"10.1016/j.tet.2010.05.091 The Baeyer-Villiger oxidation of ketones with Oxone(r) in the presence of ionic liquids as solvents Oxone(r) (4.0 mmol) was added to a solution of ketone (4.0 mmol) in ionic liquid (3.0 g) and stirred at 40 degC for 2.5-20 h (depending on the reaction rate). The progress of the reaction was monitored by GC or HPLC. After this time, the post reaction mixture was dissolved in CH2Cl2 and filtered. Next, the filtrate was concentrated and extracted with the appropriate solvent of: ethyl acetate, diethyl or dibutyl ether (6x5 mL) and concentrated. The yields of lactones after the purification by column chromatography with hexane/ethyl acetate (4:1) as the eluent were 65-95%. For HmimOAc (bp=240 degC; 70 degC/1.2 mbar) and H2mpyrOAc (bp=255 degC; 90 degC/1.2 mbar) distillation of the product or ionic liquid from the reaction mixture was performed. ILs were purified for recycling tests. After the filtration of post reaction mixture, and the extraction of the product with ethyl acetate (bmimBF4) or dibutyl ether (HmimOAc), ILs were concentrated, dried under vacuum (60 degC, 5 h) and reused. A solution of Oxone(r) (0.63 g) in 0.7 g of IL was stirred for 5 h at 40 degC. After this time the content of KHSO5 was determined by iodometric titration. Oxone(r) (4 g) was mixed with 5 g of IL and stirred for 1 h at room temperature. Next, CH2Cl2 was added to isolate the insoluble parts of Oxone(r) and to lower the viscosity. The mixture was filtered and the amount of KHSO5 in the filtrate was determined by iodometric titration.\"
+
+output: \"10.1016/j.tet.2010.05.091 The Baeyer-Villiger oxidation of [ ketones | Material ] with Oxone(r) in the presence of ionic liquids as solvents [ Oxone(r) | Material | Recipe Precursor of = added ] [ (4.0 | Number | Number Of = mmol ] [ mmol) | Amount-Unit | Amount Of = Oxone(r) ] was [ added | Operation | Next Operation = stirred | | = Operation ] to a [ solution | Material-Descriptor | Descriptor Of = ketone ] of [ ketone | Material | Recipe Precursor of = added ] [ (4.0 | Number | Number Of = mmol ] [ mmol) | Amount-Unit | Amount Of = ketone ] in [ ionic liquid | Material | Solvent Material of = added ] [ (3.0 | Number | Number Of = g ] [ g) | Amount-Unit | Amount Of = ionic liquid ] and [ stirred | Operation | Next Operation = monitored | | = Operation ] at [ 40 | Number | Number Of = degC ] [ degC | Condition-Unit | Condition Of = stirred ] for [ 2.5-20 | Number | Number Of = h ] [ h | Condition-Unit | Condition Of = stirred ] (depending on the [ reaction rate). | Condition-Type ] The progress of the reaction was [ monitored | Operation | Next Operation = dissolved | | = Operation ] by [ GC | Characterization-Apparatus | Apparatus Of = monitored ] or [ HPLC. | Characterization-Apparatus | Apparatus Of = monitored ] After this time, the post reaction [ mixture | Material ] was [ dissolved | Operation | Next Operation = filtered | | = Operation ] in [ CH2Cl2 | Material | Solvent Material of = dissolved ] and [ filtered. | Operation | Next Operation = concentrated | | = Operation ] Next, the [ filtrate | Material ] was [ concentrated | Operation | Next Operation = extracted | | = Operation ] and [ extracted | Operation | Next Operation = concentrated | | = Operation ] with the appropriate [ solvent | Material-Descriptor | Descriptor Of = ethyl acetate | Descriptor Of = diethyl | Descriptor Of = dibutyl ether ] of: [ ethyl acetate, | Material | Solvent Material of = extracted ] [ diethyl | Material | Solvent Material of = extracted ] or [ dibutyl ether | Material | Solvent Material of = extracted ] [ (6x5 | Number | Number Of = mL ] [ mL) | Amount-Unit | Amount Of = ethyl acetate | Amount Of = diethyl | Amount Of = dibutyl ether ] and [ concentrated. | Operation | Next Operation = purification | | = Operation ] The [ yields | Property-Type ] of [ lactones | Material ] after the [ purification | Operation | Next Operation = distillation | | = Operation ] by [ column chromatography | Synthesis-Apparatus | Apparatus Of = purification ] with [ [ hexane/ethyl | Nonrecipe-Material ] acetate | Nonrecipe-Material ] [ (4:1) as | Number ] the [ eluent | Material-Descriptor | Descriptor Of = ethyl acetate | Descriptor Of = hexane ] were [ [ 65-95%. | Property-Unit | Property Of = lactones ] | Number | Number Of = % ] For [ HmimOAc | Material ] [ [ (bp=240 | Property-Type | Type Of = degC ] | Number | Number Of = degC ] [ degC; | Property-Unit | Property Of = HmimOAc ] [ 70 | Number | Number Of = degC ] [ [ degC/1.2 | Property-Unit | Property Of = HmimOAc ] | Number | Number Of = mbar ] [ mbar) | Property-Unit | Property Of = HmimOAc ] and [ H2mpyrOAc | Material ] [ [ (bp=255 | Property-Type | Type Of = degC ] | Number | Number Of = degC ] [ degC; | Property-Unit | Property Of = H2mpyrOAc ] [ 90 | Number | Number Of = degC ] [ [ degC/1.2 | Property-Unit | Property Of = H2mpyrOAc ] | Number | Number Of = mbar ] [ mbar) | Property-Unit | Property Of = H2mpyrOAc ] [ distillation | Operation | Next Operation = performed | | = Operation ] of the [ product | Material ] or [ ionic liquid | Material ] from the reaction [ mixture | Material ] was [ performed. | Operation | Next Operation = purified | | = Operation ] [ ILs | Material ] were [ purified | Operation | Next Operation = filtration | | = Operation ] for recycling tests. After the [ filtration | Operation | Next Operation = extraction | | = Operation ] of post reaction [ mixture, | Material ] and the [ extraction | Operation | Next Operation = concentrated | | = Operation ] of the [ product | Material ] with [ ethyl acetate | Material ] [ (bmimBF4) | Material-Descriptor | Descriptor Of = ethyl acetate ] or [ dibutyl ether | Material ] [ (HmimOAc), | Material-Descriptor | Descriptor Of = dibutyl ether ] [ ILs | Material ] were [ concentrated, | Operation | Next Operation = dried | | = Operation ] [ dried | Operation | Next Operation = reused | | = Operation ] under [ vacuum | Condition-Misc | Condition Of = dried ] [ (60 | Number | Number Of = degC ] [ degC, | Condition-Unit | Condition Of = dried ] [ 5 | Number | Number Of = h ] [ h) | Condition-Unit | Condition Of = dried ] and [ reused. | Operation | Next Operation = stirred | | = Operation ] A [ solution | Material-Descriptor | Descriptor Of = Oxone(r) ] of [ Oxone(r) | Material | Recipe Precursor of = stirred ] [ (0.63 | Number | Number Of = g ] [ g) | Amount-Unit | Amount Of = Oxone(r) ] in [ 0.7 | Number | Number Of = g ] [ g | Amount-Unit | Amount Of = IL ] of [ IL | Material | Solvent Material of = stirred ] was [ stirred | Operation | Next Operation = determined | | = Operation ] for [ 5 | Number | Number Of = h ] [ h | Condition-Unit | Condition Of = stirred ] at [ 40 | Number | Number Of = degC ] [ degC. | Condition-Unit | Condition Of = stirred ] After this time the content of [ KHSO5 | Material ] was [ determined | Operation | Next Operation = mixed | | = Operation ] by [ iodometric titration. | Characterization-Apparatus | Apparatus Of = determined ] [ Oxone(r) | Material | Recipe Precursor of = mixed ] [ (4 | Number | Number Of = g ] [ g) | Amount-Unit | Amount Of = Oxone(r) ] was [ mixed | Operation | Next Operation = stirred | | = Operation ] with [ 5 | Number | Number Of = g ] [ g | Amount-Unit | Amount Of = IL ] of [ IL | Material | Solvent Material of = mixed ] and [ stirred | Operation | Next Operation = added | | = Operation ] for [ 1 | Number | Number Of = h ] [ h | Condition-Unit | Condition Of = stirred ] at [ room temperature. | Condition-Misc | Condition Of = stirred ] Next, [ CH2Cl2 | Material | Recipe Precursor of = added ] was [ added | Operation | Next Operation = lower | | = Operation ] to isolate the insoluble parts of [ Oxone(r) | Material ] and to [ lower | Operation | Next Operation = filtered | | = Operation ] the [ viscosity. | Property-Type ] The [ mixture | Material ] was [ filtered | Operation | Next Operation = determined | | = Operation ] and the amount of [ KHSO5 | Material ] in the [ filtrate | Material ] was [ determined | Operation | | = Operation ] by [ iodometric titration. | Characterization-Apparatus | Apparatus Of = determined ]\"
+"""
+  with open(FLAGS.input, 'r') as f:
+    samples = json.loads(f.read())
+  with open(FLAGS.output, 'w') as f:
+    for sample in samples:
+      input = sample['input']
+      output = sample['output']
+      messages = [
+        {'role': 'system', 'content': system_message},
+        {'role': 'user', 'content': input},
+        {'role': 'assistant', 'content': output}
+      ]
+      f.write(json.dumps(messages) + '\n')
 
 if __name__ == "__main__":
   add_options()
