@@ -10,7 +10,7 @@ this project is to provide a tool to extract data item from patent materials
 python3 -m pip install -r requirements.txt
 ```
 
-## Extract
+## entity and relation extraction
 
 ```shell
 python3 main.py --model (llama3|qwen2|codellama|codeqwen|customized) --mode (electrolyte|precursors|conductivity) --input_dir <path/to/directory/of/patents> [--output_dir <path/to/output/directory>] [--ckpt <path/to/customized/ckpt>]
@@ -22,22 +22,8 @@ to improve the LLM on ability to extract electrolyte related information, we use
 
 ## generate dataset
 
-Generate dataset for extracting electrolyte
-
 ```shell
-python3 create_dataset.py --mode electrolyte --input <path/to/labeled/patnet> --output <path/to/output>
-```
-
-Generate dataset for extracting precursors
-
-```shell
-python3 create_dataset.py --mode precursors --input <path/to/labeled/patent> --output <path/to/output>
-```
-
-Generate dataset for extracting conductivity
-
-```shell
-python3 create_dataset.py --mode conductivity --input <path/to/labeled/patent> --output <path/to/output>
+python3 create_dataset.py --input datasets/origin.json --output datasets/trainset.jsonl
 ```
 
 ## finetuning LLM
