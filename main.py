@@ -37,11 +37,9 @@ def main(unused_argv):
       else:
         raise Exception('unknown format!')
       text = ''.join([doc.page_content for doc in loader.load()])
-      example = example_chain_.invoke({'patent': text})
-      output = chain.invoke({'context': example})
-      results = {'example': example, 'output': output}
+      output = chain.invoke({'text': text})
       with open(join(FLAGS.output_dir, '%s_meta.txt' % splitext(f)[0]), 'w') as fp:
-        fp.write(json.dumps(results))
+        fp.write(output)
 
 if __name__ == "__main__":
   add_options()
