@@ -21,12 +21,12 @@ def main(unused_argv):
     for sample in samples:
       input = sample['input']
       output = sample['output']
-      messages = [
+      messages = {"messages": [
         {'role': 'system', 'content': system_message},
         {'role': 'user', 'content': input},
         {'role': 'assistant', 'content': output}
-      ]
-      f.write(json.dumps(messages) + '\n')
+      ]}
+      f.write(json.dumps(messages, ensure_ascii = False) + '\n')
 
 if __name__ == "__main__":
   add_options()
