@@ -10,13 +10,13 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments
 FLAGS = flags.FLAGS
 
 def add_options():
-  flags.DEFINE_string('pretrained_ckpt', default = 'Qwen/Qwen2.5-3B-Instruct', help = 'path to output checkpoint of pretraining')
+  flags.DEFINE_string('pretrained_ckpt', default = 'Qwen/Qwen2.5-0.5B-Instruct', help = 'path to output checkpoint of pretraining')
   flags.DEFINE_string('sft_ckpt', default = 'sft', help = 'path to output checkpoint of sft')
   flags.DEFINE_string('dataset', default = None, help = 'path to dataset')
   flags.DEFINE_enum('device', default = 'cuda', enum_values = {'cpu', 'cuda'}, help = 'device to use')
   flags.DEFINE_float('lr', default = '2e-4', help = 'learning rate')
   flags.DEFINE_integer('epoch', default = 1, help = 'epochs')
-  flags.DEFINE_integer('max_seq_length', default = 4096, help = 'max sequence length')
+  flags.DEFINE_integer('max_seq_length', default = 8192, help = 'max sequence length')
   flags.DEFINE_integer('batch', default = 1, help = 'batch size')
 
 def main(unused_argv):
