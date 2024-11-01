@@ -10,7 +10,7 @@ this project is to provide a tool to extract data item from patent materials
 python3 -m pip install -r requirements.txt
 ```
 
-## entity and relation extraction
+## label text in TANL format
 
 ```shell
 python3 main.py --input_dir <path/to/directory/of/patents> [--output_dir <path/to/output/directory>] [--ckpt <path/to/customized/ckpt>]
