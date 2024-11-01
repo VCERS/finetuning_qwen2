@@ -36,7 +36,7 @@ def main(unused_argv):
         loader = UnstructuredPDFLoader(join(root, f), mode = 'single', strategy = "hi_res")
       else:
         raise Exception('unknown format!')
-      text = ''.join([doc.page_content for doc in loader.load()])
+      text = ' '.join([doc.page_content for doc in loader.load()])
       output = chain.invoke({'text': text})
       with open(join(FLAGS.output_dir, '%s_meta.txt' % splitext(f)[0]), 'w') as fp:
         fp.write(output)
